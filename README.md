@@ -1,1 +1,1 @@
-# tf_ec2_infra_simple
+# terraform-ec2-infra
