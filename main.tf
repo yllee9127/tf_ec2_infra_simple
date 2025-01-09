@@ -14,14 +14,74 @@ module "vpc-1" {
   enable_dns_hostnames = true # needed for DNS resolution
 }
 
+resource "aws_iam_policy" "policy" {
+  name        = "yl_ec2_to_secrets_policy"
+  path        = "/"
+  description = "To allow EC2 to access Secrets"
+
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
+  policy = jsonencode({
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "secretsmanager:GetRandomPassword",
+                "secretsmanager:ListSecrets",
+                "secretsmanager:BatchGetSecretValue"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "VisualEditor1",
+            "Effect": "Allow",
+            "Action": "secretsmanager:*",
+            "Resource": "arn:aws:secretsmanager:ap-southeast-1:255945442255:secret:dev/ylroot/secret-VohMeD"
+        }
+    ]
+  })
+}
+
+resource "aws_iam_role" "yl_ec2_role" {
+  name = "yl_ec2_to_secrets_role"
+
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
+  assume_role_policy = jsonencode({
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "ec2.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+        }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "yl_attach" {
+  role       = aws_iam_role.yl_ec2_role.name
+  policy_arn = aws_iam_policy.policy.arn
+}
+
+resource "aws_iam_instance_profile" "yl_ec2_instance_profile" {
+  name = "yl_ec2_profile"
+  role = aws_iam_role.yl_ec2_role.name
+}
+
 resource "aws_instance" "public" {
   ami = "ami-04c913012f8977029"
   instance_type = "t2.micro"
   #subnet_id = "subnet-0caaf48818e0596cc" subnet-068c3fef4b1169bf5
   #subnet_id = "subnet-068c3fef4b1169bf5"
   subnet_id = data.aws_subnets.public-1.ids[0]
+  iam_instance_profile = aws_iam_instance_profile.yl_ec2_instance_profile.name
   associate_public_ip_address = true
-  key_name = "yl-key-pair"
+  #key_name = "yl-key-pair"
   vpc_security_group_ids = [aws_security_group.allow_ssh.id]
 
   tags = {
