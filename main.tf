@@ -63,20 +63,50 @@ resource "aws_iam_policy" "dbaccess_policy" {
     "Version": "2012-10-17",
     "Statement": [
         {
+            "Sid": "VisualEditor0",
             "Effect": "Allow",
             "Action": [
-                "dynamodb:PutItem",
+                "dynamodb:BatchGetItem",
+                "dynamodb:DescribeImport",
+                "dynamodb:ConditionCheckItem",
+                "dynamodb:DescribeContributorInsights",
+                "dynamodb:Scan",
+                "dynamodb:ListTagsOfResource",
+                "dynamodb:Query",
+                "dynamodb:DescribeStream",
+                "dynamodb:DescribeTimeToLive",
+                "dynamodb:DescribeGlobalTableSettings",
+                "dynamodb:PartiQLSelect",
+                "dynamodb:DescribeTable",
+                "dynamodb:GetShardIterator",
+                "dynamodb:DescribeGlobalTable",
                 "dynamodb:GetItem",
-                "dynamodb:Scan"
+                "dynamodb:DescribeContinuousBackups",
+                "dynamodb:DescribeExport",
+                "dynamodb:GetResourcePolicy",
+                "dynamodb:DescribeKinesisStreamingDestination",
+                "dynamodb:DescribeBackup",
+                "dynamodb:GetRecords",
+                "dynamodb:DescribeTableReplicaAutoScaling"
             ],
             "Resource": "${aws_dynamodb_table.table.arn}"
         },
         {
+            "Sid": "VisualEditor1",
             "Effect": "Allow",
             "Action": [
-                "logs:CreateLogGroup",
-                "logs:CreateLogStream",
-                "logs:PutLogEvents"
+                "dynamodb:ListContributorInsights",
+                "dynamodb:DescribeReservedCapacityOfferings",
+                "dynamodb:ListGlobalTables",
+                "dynamodb:ListTables",
+                "dynamodb:DescribeReservedCapacity",
+                "dynamodb:ListBackups",
+                "dynamodb:GetAbacStatus",
+                "dynamodb:ListImports",
+                "dynamodb:DescribeLimits",
+                "dynamodb:DescribeEndpoints",
+                "dynamodb:ListExports",
+                "dynamodb:ListStreams"
             ],
             "Resource": "*"
         }
@@ -86,7 +116,7 @@ POLICY
 }
 
 resource "aws_iam_role" "yl_ec2_role" {
-  name = "yl_ec2_to_secrets_role"
+  name = "yl_ec2_role"
 
   # Terraform's "jsonencode" function converts a
   # Terraform expression result to valid JSON syntax.
