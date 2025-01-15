@@ -14,6 +14,17 @@ module "vpc-1" {
   enable_dns_hostnames = true # needed for DNS resolution
 }
 
+resource "aws_dynamodb_table" "table" {
+  name         = "yl-bookinventory"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "ISBN"
+
+  attribute {
+    name = "ISBN"
+    type = "S" # todo: fill with apporpriate value
+  }
+}
+
 resource "aws_iam_policy" "secrets_policy" {
   name        = "yl_ec2_to_secrets_policy"
   path        = "/"
@@ -44,6 +55,36 @@ resource "aws_iam_policy" "secrets_policy" {
   })
 }
 
+resource "aws_iam_policy" "dbaccess_policy" {
+  name = "yl-bookinventory-ddbaccess"
+
+  policy = <<POLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:PutItem",
+                "dynamodb:GetItem",
+                "dynamodb:Scan"
+            ],
+            "Resource": "${aws_dynamodb_table.table.arn}"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+POLICY
+}
+
 resource "aws_iam_role" "yl_ec2_role" {
   name = "yl_ec2_to_secrets_role"
 
@@ -63,9 +104,14 @@ resource "aws_iam_role" "yl_ec2_role" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "yl_attach" {
+resource "aws_iam_role_policy_attachment" "yl_attach_lambda_policy" {
   role       = aws_iam_role.yl_ec2_role.name
   policy_arn = aws_iam_policy.secrets_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "yl_attach_dbaccess_policy" {
+  role       = aws_iam_role.yl_ec2_role.name
+  policy_arn = aws_iam_policy.dbaccess_policy.arn
 }
 
 resource "aws_iam_instance_profile" "yl_ec2_instance_profile" {
@@ -105,10 +151,20 @@ resource "aws_vpc_security_group_ingress_rule" "allow_tls_ipv4" {
   to_port = 22
 }
 
+/*
 resource "aws_vpc_security_group_egress_rule" "allow_all_ipv4" {
   security_group_id = aws_security_group.allow_ssh.id
   cidr_ipv4 = "0.0.0.0/0"
   from_port = 443
   ip_protocol = "tcp"
   to_port = 443
+}
+*/
+
+resource "aws_vpc_security_group_egress_rule" "allow_all_ipv4" {
+  security_group_id = aws_security_group.allow_ssh.id
+  cidr_ipv4 = "0.0.0.0/0"
+  from_port = 0
+  ip_protocol = "tcp"
+  to_port = 65535
 }
