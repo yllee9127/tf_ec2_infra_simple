@@ -14,7 +14,7 @@ module "vpc-1" {
   enable_dns_hostnames = true # needed for DNS resolution
 }
 
-resource "aws_iam_policy" "policy" {
+resource "aws_iam_policy" "secrets_policy" {
   name        = "yl_ec2_to_secrets_policy"
   path        = "/"
   description = "To allow EC2 to access Secrets"
@@ -65,7 +65,7 @@ resource "aws_iam_role" "yl_ec2_role" {
 
 resource "aws_iam_role_policy_attachment" "yl_attach" {
   role       = aws_iam_role.yl_ec2_role.name
-  policy_arn = aws_iam_policy.policy.arn
+  policy_arn = aws_iam_policy.secrets_policy.arn
 }
 
 resource "aws_iam_instance_profile" "yl_ec2_instance_profile" {
