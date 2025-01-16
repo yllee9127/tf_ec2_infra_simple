@@ -159,9 +159,10 @@ resource "aws_instance" "public" {
   associate_public_ip_address = true
   #key_name = "yl-key-pair"
   vpc_security_group_ids = [aws_security_group.allow_ssh.id]
+  count = 2
 
   tags = {
-    Name = "yl-ec2"
+    Name = "yl-ec2-${count.index}"
   }
 }
 
